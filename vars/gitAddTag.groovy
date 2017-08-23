@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(String tagName, String message) {
+void call(String tagName, String message) {
   echo "Adding git tag: ${tagName}"
   sh "git tag -d ${tagName} || true"
   sh """

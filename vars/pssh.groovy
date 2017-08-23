@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def call(Set<String> hosts, String command) {
+void call(Set<String> hosts, String command) {
   sh """
     pssh \
       -H "${hosts.sort().join(' ')}" \
