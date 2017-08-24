@@ -13,36 +13,20 @@
  */
 
 
-def call(String githubProject, String serviceName){
+def call(String serviceName){
   SERVICE = $serviceName
 
   // Docker/GCR constants
   IMAGE_BASE = 'gcr.io/mindmixer-sidewalk'
   IMAGE_BASE_SERVICE = "${IMAGE_BASE}/${SERVICE}"
 
-  // Environment constants
-  EDGE = 'edge'
-  LOCAL = 'local'
-  MASTER = 'master'
-  PROD = 'prod'
-  STAGE = 'stage'
-
   // Environment Maps
-  BRANCH_TO_ENVIRONMENT = [
-    (EDGE): EDGE,
-    (MASTER): STAGE,
-  ]
   ENVIRONMENT_TO_RELEASE = [
-    (EDGE): 'gamma',
-    (PROD): 'latest',
-    (STAGE): 'beta',
+    (environment.EDGE): 'gamma',
+    (environment.PROD): 'latest',
+    (environment.STAGE): 'beta',
   ]
 
-  // Deployment Types
-  ABANDON_PREDEPLOY = 'ABANDON_PREDEPLOY'
-  EDGE_DEPLOY = 'EDGE_DEPLOY'
-  PROD_DEPLOY = 'PROD_DEPLOY'
-  PROD_PRED
   pipeline {
     agent any
     environment {
@@ -115,7 +99,7 @@ def call(String githubProject, String serviceName){
             COMPOSE_PROJECT_NAME = "${SERVICE}_${env.BRANCH_NAME.toLowerCase()}_${env.BUILD_ID}"
             ENVIRONMENT = getEnvironment()
             IMAGE = "${SERVICE}:${env.BRANCH_NAME.toLowerCase()}_${env.BUILD_ID}"
-            if (params.ACTION == PROD_PREDEPLOY) {
+            if (params.ACTION == deploymentType.PROD_PREDEPLOY) {
               // Set prod images to 'beta' for testing against prod environment db w/o rebuilding
               IMAGE = "${IMAGE_BASE_SERVICE}:beta"
             }
@@ -123,51 +107,51 @@ def call(String githubProject, String serviceName){
             IMAGE_RELEASE_PRE = "${IMAGE_RELEASE}-prerelease"
             // Workflow Flags (can't reference params in environment block)
             BUILDABLE = params.ACTION != ABANDON_PREDEPLOY && (
-              ENVIRONMENT == LOCAL
-              || ENVIRONMENT == STAGE
-              || ENVIRONMENT == EDGE && params.ACTION != EDGE_DEPLOY
-              || ENVIRONMENT == PROD && params.ACTION == PROD_PREDEPLOY
+              ENVIRONMENT == environment.LOCAL
+              || ENVIRONMENT == environment.STAGE
+              || ENVIRONMENT == environment.EDGE && params.ACTION != deploymentType.EDGE_DEPLOY
+              || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_PREDEPLOY
             )
             TESTABLE = params.ACTION != ABANDON_PREDEPLOY && (
-              ENVIRONMENT == LOCAL
-              || ENVIRONMENT == STAGE
-              || ENVIRONMENT == EDGE && params.ACTION != EDGE_DEPLOY
-              || ENVIRONMENT == PROD && params.ACTION == PROD_PREDEPLOY
+              ENVIRONMENT == environment.LOCAL
+              || ENVIRONMENT == environment.STAGE
+              || ENVIRONMENT == environment.EDGE && params.ACTION != deploymentType.EDGE_DEPLOY
+              || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_PREDEPLOY
             )
             RELEASABLE = params.ACTION != ABANDON_PREDEPLOY && (
-              ENVIRONMENT == STAGE
-              || ENVIRONMENT == EDGE && params.ACTION != EDGE_DEPLOY
-              || ENVIRONMENT == PROD && params.ACTION == PROD_PREDEPLOY
+              ENVIRONMENT == environment.STAGE
+              || ENVIRONMENT == environment.EDGE && params.ACTION != deploymentType.EDGE_DEPLOY
+              || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_PREDEPLOY
             )
             PREDEPLOYABLE = params.ACTION != ABANDON_PREDEPLOY && (
-              ENVIRONMENT == STAGE
-              || ENVIRONMENT == EDGE && params.ACTION == EDGE_DEPLOY
-              || ENVIRONMENT == PROD && params.ACTION == PROD_PREDEPLOY
+              ENVIRONMENT == environment.STAGE
+              || ENVIRONMENT == environment.EDGE && params.ACTION == deploymentType.EDGE_DEPLOY
+              || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_PREDEPLOY
             )
             DEPLOYABLE = params.ACTION != ABANDON_PREDEPLOY && (
-              ENVIRONMENT == STAGE
-              || ENVIRONMENT == EDGE && params.ACTION == EDGE_DEPLOY
-              || ENVIRONMENT == PROD && params.ACTION == PROD_DEPLOY
+              ENVIRONMENT == environment.STAGE
+              || ENVIRONMENT == environment.EDGE && params.ACTION == deploymentType.EDGE_DEPLOY
+              || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_DEPLOY
             )
             // Input validation
             if (params.ACTION == ABANDON_PREDEPLOY && env.BRANCH_NAME != MASTER) {
               currentBuild.result = 'ABORTED'
               error('Must be on branch "master" to abandon a prod pre-deploy.')
             }
-            else if (params.ACTION == EDGE_DEPLOY && env.BRANCH_NAME != EDGE) {
+            else if (params.ACTION == deploymentType.EDGE_DEPLOY && env.BRANCH_NAME != environment.EDGE) {
               currentBuild.result = 'ABORTED'
               error('Must be on branch "edge" to deploy to edge environment.')
             }
-            else if (params.ACTION in [PROD_DEPLOY, PROD_PREDEPLOY] && env.BRANCH_NAME != MASTER) {
+            else if (params.ACTION in [deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY] && env.BRANCH_NAME != MASTER) {
               currentBuild.result = 'ABORTED'
               error('Must be on branch "master" to pre-deploy or deploy to prod.')
             }
-            else if (params.TAG in [EDGE, MASTER]) {
+            else if (params.TAG in [branch.EDGE, branch.MASTER]) {
               currentBuild.result = 'ABORTED'
               error('TAG may not be an environment branch name.')
             }
             // Environment State Evaluation
-            if (env.BRANCH_NAME == MASTER && isStageLocked() && !(params.ACTION in [ABANDON_PREDEPLOY, PROD_DEPLOY, PROD_PREDEPLOY])) {
+            if (env.BRANCH_NAME == MASTER && isStageLocked() && !(params.ACTION in [deploymentType.ABANDON_PREDEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
               currentBuild.result = 'ABORTED'
               error('Stage is now locked while pre-deploy testing is in progress. Ask QA for more information.')
             }
@@ -175,13 +159,13 @@ def call(String githubProject, String serviceName){
             sh "git config user.name jenkins"
             sh "git remote set-url origin git@github.com:mysidewalk/${SERVICE}.git"
             sh 'git fetch --tags'
-            if (params.ACTION == EDGE_DEPLOY && env.BRANCH_NAME == EDGE) {
+            if (params.ACTION == deploymentType.EDGE_DEPLOY && env.BRANCH_NAME == branch.EDGE) {
               sh "git checkout gamma-prerelease"
             }
-            else if (params.ACTION == PROD_PREDEPLOY) {
+            else if (params.ACTION == deploymentType.PROD_PREDEPLOY) {
               sh "git checkout beta"
             }
-            else if (params.ACTION == PROD_DEPLOY) {
+            else if (params.ACTION == deploymentType.PROD_DEPLOY) {
               sh "git checkout latest-prerelease"
             }
             if (params.ACTION != 'none') {
@@ -237,7 +221,7 @@ def call(String githubProject, String serviceName){
           )
           sh "touch ${ENVFILE}"
           script {
-            if (ENVIRONMENT in [EDGE, PROD, STAGE]) {
+            if (ENVIRONMENT in [environment.EDGE, environment.PROD, environment.STAGE]) {
               sh """
                 docker-compose run --rm etcd2env \
                   sh -c 'python generate_env_vars.py ${ETCD_HOST} ${SERVICE} ${ENVIRONMENT} && python generate_env_vars.py ${ETCD_HOST} jenkins ${ENVIRONMENT}' \
@@ -265,7 +249,7 @@ def call(String githubProject, String serviceName){
         when { expression { return BUILDABLE } }
         steps {
           script {
-            if (params.ACTION in [EDGE_DEPLOY, PROD_PREDEPLOY]) {
+            if (params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_PREDEPLOY]) {
               echo 'Skipping "${SERVICE}" docker image build'
             }
             else {
@@ -292,15 +276,15 @@ def call(String githubProject, String serviceName){
         when { expression { return RELEASABLE } }
         steps {
           script {
-            if (ENVIRONMENT in [EDGE, STAGE]) {
+            if (ENVIRONMENT in [environment.EDGE, environment.STAGE]) {
               imagePush(IMAGE, "${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE_PRE}")
               gitAddTag("${IMAGE_RELEASE_PRE}", 'passed CI')
             }
-            if (ENVIRONMENT == PROD && params.ACTION == PROD_PREDEPLOY) {
+            if (ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_PREDEPLOY) {
               imagePush(IMAGE, "${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE_PRE}")
               gitAddTag("${IMAGE_RELEASE_PRE}", 'release candidate')
             }
-            if (ENVIRONMENT == PROD && params.TAG != 'none') {
+            if (ENVIRONMENT == environment.PROD && params.TAG != 'none') {
               imagePush("${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE_PRE}", "${IMAGE_BASE_SERVICE}:${params.TAG}")
               gitAddTag(params.TAG, params.TAG_MESSAGE)
               currentBuild.displayName += " - ${params.TAG}"
@@ -336,7 +320,7 @@ def call(String githubProject, String serviceName){
       always {
         sh 'make clean || true'
         script {
-          if (!(params.ACTION in [EDGE_DEPLOY, PROD_DEPLOY, PROD_PREDEPLOY])) {
+          if (!(params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
             sh "docker rmi ${IMAGE} || true"
           }
         }
@@ -346,7 +330,7 @@ def call(String githubProject, String serviceName){
       }
       failure {
         script {
-          if (currentBuild.previousBuild?.result != 'FAILURE' && ENVIRONMENT in [EDGE, PROD, STAGE]) {
+          if (currentBuild.previousBuild?.result != 'FAILURE' && ENVIRONMENT in [environment.EDGE, environment.PROD, environment.STAGE]) {
             slackSend channel: '#developers', color: 'danger', message: "${currentBuild.fullDisplayName} Failed. (<${env.RUN_DISPLAY_URL}|Open>)"
           }
         }
@@ -354,17 +338,17 @@ def call(String githubProject, String serviceName){
       success {
         script {
           def message
-          if (params.ACTION == PROD_PREDEPLOY) {
+          if (params.ACTION == deploymentType.PROD_PREDEPLOY) {
             message = "Stage ${SERVICE} pipeline is now locked while pre-deploy testing of tag '${TAG}' is in progress."
             message += " Please hold PR merges to ${SERVICE} until notified that stage ${SERVICE} pipeline is unlocked."
           }
-          else if (params.ACTION in [EDGE_DEPLOY, PROD_DEPLOY]) {
+          else if (params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_DEPLOY]) {
             message = "Deployment of ${SERVICE} was successful to ${ENVIRONMENT}."
-            if (params.ACTION == PROD_DEPLOY) {
+            if (params.ACTION == deploymentType.PROD_DEPLOY) {
               message += " Stage ${SERVICE} pipeline is now unlocked."
             }
           }
-          else if (BUILDABLE && currentBuild.previousBuild?.result != 'SUCCESS' && ENVIRONMENT in [EDGE, PROD, STAGE]) {
+          else if (BUILDABLE && currentBuild.previousBuild?.result != 'SUCCESS' && ENVIRONMENT in [environment.EDGE, environment.PROD, environment.STAGE]) {
             message = "${currentBuild.fullDisplayName} Back to normal."
           }
           if (message) {
