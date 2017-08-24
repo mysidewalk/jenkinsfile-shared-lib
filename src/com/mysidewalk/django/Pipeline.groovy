@@ -50,21 +50,21 @@ def buildMicroservice(String serviceName){
     parameters {
       choice(
         name: 'ACTION',
-        choices: 'none\nABANDON_PREDEPLOY\nEDGE_DEPLOY\nPROD_PREDEPLOY\nPROD_DEPLOY',
-        description: """ABANDON_PREDEPLOY
+        choices: "none\n${deploymentType.ABANDON_PREDEPLOY}\n${deploymentType.EDGE_DEPLOY}\n${deploymentType.PROD_PREDEPLOY}\n${deploymentType.PROD_DEPLOY}",
+        description: """${deploymentType.ABANDON_PREDEPLOY}
     1) Removes git tag "latest-prerelease"
     2) Removes GCR tags "latest-prerelease"
     3) Removes "latest-prerelease" image from GCE instances
     Must be on branch "master" to run this deployment.
 
-  EDGE_DEPLOY
+  ${deploymentType.EDGE_DEPLOY}
     1) Pulls "gamma-prerelease" docker images on edge GCE instance
     2) Promotes GCR docker images labeled "gamma-prerelease" to "gamma"
     3) Adds git tag "gamma" to "gamma-prerelease" tagged commit
     4) Restarts edge GCE services to use new "gamma" docker images
     Must be on branch "edge" to run this deployment.
 
-  PROD_PREDEPLOY
+  ${deploymentType.PROD_PREDEPLOY}
     1) Promotes GCR docker images labeled "beta" to "latest-prerelease"
     2) Adds git tag "latest-prerelease" to "beta" tagged commit
     3) Adds GCR tag of "TAG" to docker images
@@ -73,7 +73,7 @@ def buildMicroservice(String serviceName){
     6) Locks stage by preventing new image builds of master until PROD_DEPLOY or ABANDON_PREDEPLOY have been run
     Must be on branch "master" to run this deployment.
 
-  PROD_DEPLOY
+  ${deploymentType.PROD_DEPLOY}
     1) Promotes GCR docker images labeled "latest-prerelease" to "latest"
     2) Restarts prod GCE services to use new "latest" docker images
     Must be on branch "master" to run this deployment.""",
@@ -81,12 +81,12 @@ def buildMicroservice(String serviceName){
       string(
         name: 'TAG',
         defaultValue: 'none',
-        description: 'Git and GCR Docker image tag name. (e.g. 2017-01-30-v1) Only used by PROD_PREDEPLOY.',
+        description: 'Git and GCR Docker image tag name. (e.g. 2017-01-30-v1) Only used by ${deploymentType.PROD_PREDEPLOY}.',
       )
       text(
         name: 'TAG_MESSAGE',
         defaultValue: 'release candidate',
-        description: 'Git tag message. (e.g. "This is the first release of reports.") Only used by PROD_PREDEPLOY.',
+        description: 'Git tag message. (e.g. "This is the first release of reports.") Only used by ${deploymentType.PROD_PREDEPLOY}.',
       )
     }
     options {
@@ -108,35 +108,35 @@ def buildMicroservice(String serviceName){
             IMAGE_RELEASE = ENVIRONMENT_TO_RELEASE[ENVIRONMENT] ?: env.BRANCH_NAME.toLowerCase()
             IMAGE_RELEASE_PRE = "${IMAGE_RELEASE}-prerelease"
             // Workflow Flags (can't reference params in environment block)
-            BUILDABLE = params.ACTION != ABANDON_PREDEPLOY && (
+            BUILDABLE = params.ACTION != deploymentType.ABANDON_PREDEPLOY && (
               ENVIRONMENT == environment.LOCAL
               || ENVIRONMENT == environment.STAGE
               || ENVIRONMENT == environment.EDGE && params.ACTION != deploymentType.EDGE_DEPLOY
               || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_PREDEPLOY
             )
-            TESTABLE = params.ACTION != ABANDON_PREDEPLOY && (
+            TESTABLE = params.ACTION != deploymentType.ABANDON_PREDEPLOY && (
               ENVIRONMENT == environment.LOCAL
               || ENVIRONMENT == environment.STAGE
               || ENVIRONMENT == environment.EDGE && params.ACTION != deploymentType.EDGE_DEPLOY
               || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_PREDEPLOY
             )
-            RELEASABLE = params.ACTION != ABANDON_PREDEPLOY && (
+            RELEASABLE = params.ACTION != deploymentType.ABANDON_PREDEPLOY && (
               ENVIRONMENT == environment.STAGE
               || ENVIRONMENT == environment.EDGE && params.ACTION != deploymentType.EDGE_DEPLOY
               || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_PREDEPLOY
             )
-            PREDEPLOYABLE = params.ACTION != ABANDON_PREDEPLOY && (
+            PREDEPLOYABLE = params.ACTION != deploymentType.ABANDON_PREDEPLOY && (
               ENVIRONMENT == environment.STAGE
               || ENVIRONMENT == environment.EDGE && params.ACTION == deploymentType.EDGE_DEPLOY
               || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_PREDEPLOY
             )
-            DEPLOYABLE = params.ACTION != ABANDON_PREDEPLOY && (
+            DEPLOYABLE = params.ACTION != deploymentType.ABANDON_PREDEPLOY && (
               ENVIRONMENT == environment.STAGE
               || ENVIRONMENT == environment.EDGE && params.ACTION == deploymentType.EDGE_DEPLOY
               || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_DEPLOY
             )
             // Input validation
-            if (params.ACTION == ABANDON_PREDEPLOY && env.BRANCH_NAME != MASTER) {
+            if (params.ACTION == deploymentType.ABANDON_PREDEPLOY && env.BRANCH_NAME != MASTER) {
               currentBuild.result = 'ABORTED'
               error('Must be on branch "master" to abandon a prod pre-deploy.')
             }
@@ -230,11 +230,11 @@ def buildMicroservice(String serviceName){
                   > ${ENVFILE}
               """
             }
-            if (PREDEPLOYABLE || DEPLOYABLE || params.ACTION == ABANDON_PREDEPLOY) {
+            if (PREDEPLOYABLE || DEPLOYABLE || params.ACTION == deploymentType.ABANDON_PREDEPLOY) {
               GCE_INSTANCES = parseEnvfile("GCE_${SERVICE}", ENVFILE).tokenize(' ').toSet()
               pssh(GCE_INSTANCES, "sudo /etc/auth-gcr.sh")
             }
-            if (params.ACTION == ABANDON_PREDEPLOY && isStageLocked(env.BRANCH_NAME.toLowerCase())) {
+            if (params.ACTION == deploymentType.ABANDON_PREDEPLOY && isStageLocked(env.BRANCH_NAME.toLowerCase())) {
               gitRemoveTag('latest-prerelease')
               imageDelete("${IMAGE_BASE_SERVICE}:latest-prerelease")
               pssh(GCE_INSTANCES, "sudo docker rmi ${IMAGE_BASE_SERVICE}:latest-prerelease || true")
