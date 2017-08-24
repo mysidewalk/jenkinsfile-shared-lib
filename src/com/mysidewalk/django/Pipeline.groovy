@@ -16,7 +16,7 @@ package com.mysidewalk.django
 
 
 def buildMicroservice(String serviceName){
-  SERVICE = $serviceName
+  SERVICE = serviceName
 
   // Docker/GCR constants
   IMAGE_BASE = 'gcr.io/mindmixer-sidewalk'
