@@ -136,7 +136,7 @@ def buildMicroservice(String serviceName){
               || ENVIRONMENT == environment.PROD && params.ACTION == deploymentType.PROD_DEPLOY
             )
             // Input validation
-            if (params.ACTION == deploymentType.ABANDON_PREDEPLOY && env.BRANCH_NAME != MASTER) {
+            if (params.ACTION == deploymentType.ABANDON_PREDEPLOY && env.BRANCH_NAME != branch.MASTER) {
               currentBuild.result = 'ABORTED'
               error('Must be on branch "master" to abandon a prod pre-deploy.')
             }
@@ -144,7 +144,7 @@ def buildMicroservice(String serviceName){
               currentBuild.result = 'ABORTED'
               error('Must be on branch "edge" to deploy to edge environment.')
             }
-            else if (params.ACTION in [deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY] && env.BRANCH_NAME != MASTER) {
+            else if (params.ACTION in [deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY] && env.BRANCH_NAME != branch.MASTER) {
               currentBuild.result = 'ABORTED'
               error('Must be on branch "master" to pre-deploy or deploy to prod.')
             }
@@ -153,7 +153,7 @@ def buildMicroservice(String serviceName){
               error('TAG may not be an environment branch name.')
             }
             // Environment State Evaluation
-            if (env.BRANCH_NAME == MASTER && isStageLocked(env.BRANCH_NAME.toLowerCase()) && !(params.ACTION in [deploymentType.ABANDON_PREDEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
+            if (env.BRANCH_NAME == branch.MASTER && isStageLocked(env.BRANCH_NAME.toLowerCase()) && !(params.ACTION in [deploymentType.ABANDON_PREDEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
               currentBuild.result = 'ABORTED'
               error('Stage is now locked while pre-deploy testing is in progress. Ask QA for more information.')
             }
@@ -175,52 +175,6 @@ def buildMicroservice(String serviceName){
             }
           }
           writeFile file: '.env', text: "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
-          writeFile (
-            file: 'docker-compose.yml',
-            text: """
-  version: '2'
-  services:
-    etcd2env:
-      image: ${IMAGE_BASE}/etcd2env
-    mongo:
-      image: mongo:3
-      environment:
-        SHELL: bash
-        TERM: xterm
-      expose:
-        - "27017"
-      hostname: mongo
-    postgres:
-      image: gcr.io/mindmixer-sidewalk/postgres:9.5
-      environment:
-        SHELL: bash
-        TERM: xterm
-      hostname: postgres
-      networks:
-        default:
-          aliases:
-           - db
-      volumes_from:
-        - postgres-data
-    postgres-data:
-      image: gcr.io/mindmixer-sidewalk/postgres-data:development
-    ${SERVICE}:
-      build: .
-      depends_on:
-        - postgres
-        - mongo
-      env_file:
-        - ${ENVFILE}
-      environment:
-        REUSE_DB: 1
-        SHELL: bash
-        TERM: xterm
-      expose:
-        - "9003"
-      hostname: ${SERVICE}
-      image: ${IMAGE}
-  """,
-          )
           sh "touch ${ENVFILE}"
           script {
             if (ENVIRONMENT in [environment.EDGE, environment.PROD, environment.STAGE]) {
@@ -252,11 +206,11 @@ def buildMicroservice(String serviceName){
         steps {
           script {
             if (params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_PREDEPLOY]) {
-              echo 'Skipping "${SERVICE}" docker image build'
+              echo "Skipping ${SERVICE} docker image build"
             }
             else {
-              echo 'Building "${SERVICE}" docker image'
-              sh 'docker-compose build ${SERVICE}'
+              echo "Building ${SERVICE} docker image"
+              sh "docker-compose build ${SERVICE}"
             }
           }
         }
