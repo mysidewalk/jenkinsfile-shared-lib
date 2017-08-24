@@ -16,68 +16,61 @@ package com.mysidewalk.django
 
 
 def buildMicroservice(String serviceName, String dockerComposeFile){
-  SERVICE = serviceName
+  COMPOSE_PROJECT_NAME = ''
   ENVFILE = 'envfile'
-
-  // Docker/GCR constants
-  IMAGE_BASE = 'gcr.io/mindmixer-sidewalk'
-  IMAGE_BASE_SERVICE = "${IMAGE_BASE}/${SERVICE}"
-
-  // Environment Maps
+  ENVIRONMENT = ''
   ENVIRONMENT_TO_RELEASE = [
     (environment.EDGE): 'gamma',
     (environment.PROD): 'latest',
     (environment.STAGE): 'beta',
   ]
+  ETCD_HOST = 'config-1.c.mindmixer-sidewalk.internal'
+  GCE_INSTANCES = ''
+  IMAGE = ''
+  IMAGE_BASE = 'gcr.io/mindmixer-sidewalk'
+  IMAGE_BASE_SERVICE = "${IMAGE_BASE}/${serviceName}"
+  IMAGE_RELEASE = ''
+  IMAGE_RELEASE_PRE = ''
+  SERVICE = serviceName
+  // Workflow Flags
+  BUILDABLE = false
+  TESTABLE = false
+  RELEASABLE = false
+  PREDEPLOYABLE = false
+  DEPLOYABLE = false
 
   pipeline {
     agent any
-    environment {
-      COMPOSE_PROJECT_NAME = ''
-      ENVFILE = 'envfile'
-      ENVIRONMENT = ''
-      ETCD_HOST = 'config-1.c.mindmixer-sidewalk.internal'
-      GCE_INSTANCES = null
-      IMAGE = ''
-      IMAGE_RELEASE = ''
-      IMAGE_RELEASE_PRE = ''
-      // Workflow Flags
-      BUILDABLE = false
-      TESTABLE = false
-      RELEASABLE = false
-      PREDEPLOYABLE = false
-      DEPLOYABLE = false
-    }
     parameters {
       choice(
         name: 'ACTION',
         choices: "none\n${deploymentType.ABANDON_PREDEPLOY}\n${deploymentType.EDGE_DEPLOY}\n${deploymentType.PROD_PREDEPLOY}\n${deploymentType.PROD_DEPLOY}",
         description: """${deploymentType.ABANDON_PREDEPLOY}
-    1) Removes git tag "latest-prerelease"
-    2) Removes GCR tags "latest-prerelease"
-    3) Removes "latest-prerelease" image from GCE instances
-    Must be on branch "master" to run this deployment.
+  1) Removes git tag "latest-prerelease"
+  2) Removes GCR tags "latest-prerelease"
+  3) Removes "latest-prerelease" image from GCE instances
+  Must be on branch "master" to run this deployment.
 
-  ${deploymentType.EDGE_DEPLOY}
-    1) Pulls "gamma-prerelease" docker images on edge GCE instance
-    2) Promotes GCR docker images labeled "gamma-prerelease" to "gamma"
-    3) Adds git tag "gamma" to "gamma-prerelease" tagged commit
-    4) Restarts edge GCE services to use new "gamma" docker images
-    Must be on branch "edge" to run this deployment.
+${deploymentType.EDGE_DEPLOY}
+  1) Pulls "gamma-prerelease" docker images on edge GCE instance
+  2) Promotes GCR docker images labeled "gamma-prerelease" to "gamma"
+  3) Adds git tag "gamma" to "gamma-prerelease" tagged commit
+  4) Restarts edge GCE services to use new "gamma" docker images
+  Must be on branch "edge" to run this deployment.
 
-  ${deploymentType.PROD_PREDEPLOY}
-    1) Promotes GCR docker images labeled "beta" to "latest-prerelease"
-    2) Adds git tag "latest-prerelease" to "beta" tagged commit
-    3) Adds GCR tag of "TAG" to docker images
-    4) Adds git tag of "TAG" with "TAG_MESSAGE" to "latest-prerelease" tagged commit
-    5) Pulls "latest-prerelease" docker images on prod GCE instances
-    6) Locks stage by preventing new image builds of master until PROD_DEPLOY or ABANDON_PREDEPLOY have been run
-    Must be on branch "master" to run this deployment.
+${deploymentType.PROD_PREDEPLOY}
+  1) Promotes GCR docker images labeled "beta" to "latest-prerelease"
+  2) Adds git tag "latest-prerelease" to "beta" tagged commit
+  3) Adds GCR tag of "TAG" to docker images
+  4) Adds git tag of "TAG" with "TAG_MESSAGE" to "latest-prerelease" tagged commit
+  5) Pulls "latest-prerelease" docker images on prod GCE instances
+  6) Locks stage by preventing new image builds of master until PROD_DEPLOY or ABANDON_PREDEPLOY have been run
+  Must be on branch "master" to run this deployment.
 
-  ${deploymentType.PROD_DEPLOY}
-    1) Promotes GCR docker images labeled "latest-prerelease" to "latest"
-    2) Restarts prod GCE services to use new "latest" docker images
-    Must be on branch "master" to run this deployment.""",
+${deploymentType.PROD_DEPLOY}
+  1) Promotes GCR docker images labeled "latest-prerelease" to "latest"
+  2) Restarts prod GCE services to use new "latest" docker images
+  Must be on branch "master" to run this deployment.""",
       )
       string(
         name: 'TAG',
@@ -215,8 +208,11 @@ IMAGE_BASE=${IMAGE_BASE}
         }
       }
       stage('Build Image') {
-        when { expression { return BUILDABLE } }
+        //when { expression { return BUILDABLE } }
         steps {
+          if (!whenHack(BUILDABLE)) {
+            return
+          }
           script {
             if (params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_PREDEPLOY]) {
               echo "Skipping ${SERVICE} docker image build"
@@ -229,21 +225,30 @@ IMAGE_BASE=${IMAGE_BASE}
         }
       }
       stage('Test') {
-        when { expression { return TESTABLE } }
+        //when { expression { return TESTABLE } }
         steps {
           parallel(
             unit: {
+              if (!whenHack(TESTABLE)) {
+                 return
+              }
               sh "docker run --rm ${IMAGE} python manage.py test --settings=settings.unittesting"
             },
             integration: {
+              if (!whenHack(TESTABLE)) {
+                 return
+              }
               sh 'make testintegration'
             }
           )
         }
       }
       stage('Release Docker Image to GCR') {
-        when { expression { return RELEASABLE } }
+        //when { expression { return RELEASABLE } }
         steps {
+          if (!whenHack(RELEASABLE)) {
+            return
+          }
           script {
             if (ENVIRONMENT in [environment.EDGE, environment.STAGE]) {
               imagePush(IMAGE, "${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE_PRE}")
@@ -262,23 +267,32 @@ IMAGE_BASE=${IMAGE_BASE}
         }
       }
       stage('Predeploy Prerelease Image to GCE') {
-        when { expression { return PREDEPLOYABLE } }
+        //when { expression { return PREDEPLOYABLE } }
         steps {
+          if (!whenHack(PREDEPLOYABLE)) {
+            return
+          }
           script {
             psshPullImage(GCE_INSTANCES, "${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE_PRE}")
           }
         }
       }
       stage('Deploy: Promote Prerelease Images') {
-        when { expression { return DEPLOYABLE } }
+        //when { expression { return DEPLOYABLE } }
         steps {
+          if (!whenHack(DEPLOYABLE)) {
+            return
+          }
           imagePush("${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE_PRE}", "${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE}")
           gitAddTag("${IMAGE_RELEASE}", 'ready for deploy')
         }
       }
       stage('Deploy: GCE Update Service') {
-        when { expression { return DEPLOYABLE } }
+        //when { expression { return DEPLOYABLE } }
         steps {
+          if (!whenHack(DEPLOYABLE)) {
+            return
+          }
           script {
             gceUpdateService(GCE_INSTANCES, "${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE}", "${SERVICE}")
           }
