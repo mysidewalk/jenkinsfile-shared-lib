@@ -5,6 +5,6 @@
 void call(boolean conditional) {
   if ( !conditional ) {
     echo 'Stage skipped due to when conditional'
-    return
   }
+  conditional
 }
