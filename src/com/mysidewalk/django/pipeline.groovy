@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-package com.mysidewalk
+package com.mysidewalk.django
 
 /**
  *  Pipeline for building, testing, releasing, and pre/deploying a django microservice Docker image.
@@ -15,7 +15,7 @@ package com.mysidewalk
  */
 
 
-def call(String serviceName){
+def buildMicroservice(String serviceName){
   SERVICE = $serviceName
 
   // Docker/GCR constants
