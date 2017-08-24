@@ -15,8 +15,9 @@ package com.mysidewalk.django
  */
 
 
-def buildMicroservice(String serviceName){
+def buildMicroservice(String serviceName, String dockerComposeFile){
   SERVICE = serviceName
+  ENVFILE = 'envfile'
 
   // Docker/GCR constants
   IMAGE_BASE = 'gcr.io/mindmixer-sidewalk'
@@ -174,7 +175,19 @@ def buildMicroservice(String serviceName){
               currentBuild.displayName += " - ${params.ACTION}"
             }
           }
-          writeFile file: '.env', text: "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
+          writeFile (
+            file: '.env',
+            text: """
+COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
+ENVFILE=${ENVFILE}
+IMAGE=${IMAGE}
+IMAGE_BASE=${IMAGE_BASE}
+"""
+          )
+          writeFile (
+            file: 'docker-compose.yml',
+            text: dockerComposeFile,
+          )
           sh "touch ${ENVFILE}"
           script {
             if (ENVIRONMENT in [environment.EDGE, environment.PROD, environment.STAGE]) {
