@@ -1,5 +1,7 @@
 #!/usr/bin/env groovy
 
+package com.mysidewalk
+
 /**
  *  Pipeline for building, testing, releasing, and pre/deploying a django microservice Docker image.
  *
