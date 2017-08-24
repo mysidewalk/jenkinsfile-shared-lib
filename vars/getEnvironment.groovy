@@ -1,17 +1,15 @@
 #!/usr/bin/env groovy
 
-ENVIRONMENT_TO_RELEASE = [
-  (environment.EDGE): 'gamma',
-  (environment.PROD): 'latest',
-  (environment.STAGE): 'beta',
-]
-
-String call(String branchName) {
-  if (params.ACTION in [deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY]) {
-    environment = environment.PROD
+String call(String deploymentType, String branchName) {
+  BRANCH_TO_ENVIRONMENT = [
+    (branch.EDGE): environment.EDGE,
+    (branch.MASTER): environment.STAGE,
+  ]
+  if (deploymentType in [deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY]) {
+    result = environment.PROD
   }
   else {
-    environment = BRANCH_TO_ENVIRONMENT[env.BRANCH_NAME] ?: environment.LOCAL
+    result = BRANCH_TO_ENVIRONMENT[$branchName] ?: environment.LOCAL
   }
-  environment
+  result
 }

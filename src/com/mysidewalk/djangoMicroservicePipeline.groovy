@@ -97,7 +97,7 @@ def call(String serviceName){
         steps {
           script {
             COMPOSE_PROJECT_NAME = "${SERVICE}_${env.BRANCH_NAME.toLowerCase()}_${env.BUILD_ID}"
-            ENVIRONMENT = getEnvironment()
+            ENVIRONMENT = getEnvironment(params.ACTION, env.BRANCH_NAME.toLowerCase())
             IMAGE = "${SERVICE}:${env.BRANCH_NAME.toLowerCase()}_${env.BUILD_ID}"
             if (params.ACTION == deploymentType.PROD_PREDEPLOY) {
               // Set prod images to 'beta' for testing against prod environment db w/o rebuilding
@@ -151,7 +151,7 @@ def call(String serviceName){
               error('TAG may not be an environment branch name.')
             }
             // Environment State Evaluation
-            if (env.BRANCH_NAME == MASTER && isStageLocked() && !(params.ACTION in [deploymentType.ABANDON_PREDEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
+            if (env.BRANCH_NAME == MASTER && isStageLocked(env.BRANCH_NAME.toLowerCase()) && !(params.ACTION in [deploymentType.ABANDON_PREDEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
               currentBuild.result = 'ABORTED'
               error('Stage is now locked while pre-deploy testing is in progress. Ask QA for more information.')
             }
@@ -229,10 +229,10 @@ def call(String serviceName){
               """
             }
             if (PREDEPLOYABLE || DEPLOYABLE || params.ACTION == ABANDON_PREDEPLOY) {
-              GCE_INSTANCES = parseEnvfile("GCE_${SERVICE}").tokenize(' ').toSet()
+              GCE_INSTANCES = parseEnvfile("GCE_${SERVICE}", ENVFILE).tokenize(' ').toSet()
               pssh(GCE_INSTANCES, "sudo /etc/auth-gcr.sh")
             }
-            if (params.ACTION == ABANDON_PREDEPLOY && isStageLocked()) {
+            if (params.ACTION == ABANDON_PREDEPLOY && isStageLocked(env.BRANCH_NAME.toLowerCase())) {
               gitRemoveTag('latest-prerelease')
               imageDelete("${IMAGE_BASE_SERVICE}:latest-prerelease")
               pssh(GCE_INSTANCES, "sudo docker rmi ${IMAGE_BASE_SERVICE}:latest-prerelease || true")
