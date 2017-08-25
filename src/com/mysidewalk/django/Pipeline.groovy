@@ -287,6 +287,14 @@ IMAGE_BASE=${IMAGE_BASE}
           gitAddTag("${IMAGE_RELEASE}", 'ready for deploy')
         }
       }
+      stage('Deploy: Migrate Database') {
+        when { expression { return DEPLOYABLE } }
+        steps {
+          script {
+            sh "make ${SERVICE}"
+          }
+        }
+      }
       stage('Deploy: GCE Update Service') {
         //when { expression { return DEPLOYABLE } }
         steps {
