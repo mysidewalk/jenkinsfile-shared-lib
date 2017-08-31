@@ -15,7 +15,7 @@ package com.mysidewalk.django
  */
 
 
-def buildMicroservice(String serviceName, String dockerComposeFile){
+def buildMicroservice(String serviceName, String dockerComposeFile='') {
   COMPOSE_PROJECT_NAME = ''
   ENVFILE = 'envfile'
   ENVIRONMENT = ''
@@ -175,11 +175,38 @@ COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
 ENVFILE=${ENVFILE}
 IMAGE=${IMAGE}
 IMAGE_BASE=${IMAGE_BASE}
+SERVICE=${SERVICE}
 """
           )
           writeFile (
             file: 'docker-compose.yml',
-            text: dockerComposeFile,
+            text: dockerComposeFile or '''
+version: '2'
+services:
+  ${SERVICE}:
+    build: .
+    depends_on:
+      - postgres
+    env_file:
+      - ${ENVFILE}
+    environment:
+      REUSE_DB: 1
+    hostname: ${SERVICE}
+    image: ${IMAGE}
+  etcd2env:
+    image: ${IMAGE_BASE}/etcd2env
+  postgres:
+    hostname: postgres
+    image: ${IMAGE_BASE}/postgres:9.5
+    networks:
+      default:
+        aliases:
+         - db
+    volumes_from:
+      - postgres-data
+  postgres-data:
+    image: ${IMAGE_BASE}/postgres-data:development
+''',
           )
           sh "touch ${ENVFILE}"
           script {
