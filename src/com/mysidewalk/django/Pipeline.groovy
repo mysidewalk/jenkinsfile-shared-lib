@@ -323,6 +323,9 @@ services:
         when { expression { return DEPLOYABLE } }
         steps {
           script {
+            if (!whenHack(DEPLOYABLE)) {
+              return
+            }
             sh "make ${SERVICE}"
           }
         }
