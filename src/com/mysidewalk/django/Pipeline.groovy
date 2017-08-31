@@ -218,7 +218,7 @@ services:
               """
             }
             if (PREDEPLOYABLE || DEPLOYABLE || params.ACTION == deploymentType.ABANDON_PREDEPLOY) {
-              GCE_INSTANCES = parseEnvfile("GCE_${SERVICE}", ENVFILE).tokenize(' ').toSet()
+              GCE_INSTANCES = parseEnvfile("GCE_${SERVICE.toUpperCase()}", ENVFILE).tokenize(' ').toSet()
               pssh(GCE_INSTANCES, "sudo /etc/auth-gcr.sh")
             }
             if (params.ACTION == deploymentType.ABANDON_PREDEPLOY && isStageLocked(IMAGE_BASE_SERVICE)) {
