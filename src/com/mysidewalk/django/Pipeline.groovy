@@ -180,7 +180,7 @@ SERVICE=${SERVICE}
           )
           writeFile (
             file: 'docker-compose.yml',
-            text: dockerComposeFile ?: '''
+            text: dockerComposeFile ?: """
 version: '2'
 services:
   ${SERVICE}:
@@ -206,7 +206,7 @@ services:
       - postgres-data
   postgres-data:
     image: ${IMAGE_BASE}/postgres-data:development
-''',
+""",
           )
           sh "touch ${ENVFILE}"
           script {
