@@ -147,7 +147,7 @@ ${deploymentType.PROD_DEPLOY}
               error('TAG may not be an environment branch name.')
             }
             // Environment State Evaluation
-            if (env.BRANCH_NAME == branch.MASTER && isStageLocked(env.BRANCH_NAME.toLowerCase()) && !(params.ACTION in [deploymentType.ABANDON_PREDEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
+            if (env.BRANCH_NAME == branch.MASTER && isStageLocked(IMAGE_BASE_SERVICE) && !(params.ACTION in [deploymentType.ABANDON_PREDEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
               currentBuild.result = 'ABORTED'
               error('Stage is now locked while pre-deploy testing is in progress. Ask QA for more information.')
             }
@@ -194,7 +194,7 @@ IMAGE_BASE=${IMAGE_BASE}
               GCE_INSTANCES = parseEnvfile("GCE_${SERVICE}", ENVFILE).tokenize(' ').toSet()
               pssh(GCE_INSTANCES, "sudo /etc/auth-gcr.sh")
             }
-            if (params.ACTION == deploymentType.ABANDON_PREDEPLOY && isStageLocked(env.BRANCH_NAME.toLowerCase())) {
+            if (params.ACTION == deploymentType.ABANDON_PREDEPLOY && isStageLocked(IMAGE_BASE_SERVICE)) {
               gitRemoveTag('latest-prerelease')
               imageDelete("${IMAGE_BASE_SERVICE}:latest-prerelease")
               pssh(GCE_INSTANCES, "sudo docker rmi ${IMAGE_BASE_SERVICE}:latest-prerelease || true")
@@ -205,6 +205,11 @@ IMAGE_BASE=${IMAGE_BASE}
           sh 'docker pull gcr.io/mindmixer-sidewalk/python:onbuild'
           // Ignore pull failures for local-only images
           sh 'docker-compose pull --ignore-pull-failures --parallel'
+          script {
+            if (TESTABLE || DEPLOYABLE) {
+              sh "docker-compose up -d postgres"
+            }
+          }
         }
       }
       stage('Build Image') {
