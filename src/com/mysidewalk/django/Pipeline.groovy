@@ -180,7 +180,7 @@ SERVICE=${SERVICE}
           )
           writeFile (
             file: 'docker-compose.yml',
-            text: dockerComposeFile or '''
+            text: dockerComposeFile ?: '''
 version: '2'
 services:
   ${SERVICE}:
