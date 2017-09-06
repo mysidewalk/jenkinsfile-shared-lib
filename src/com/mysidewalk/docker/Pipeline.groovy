@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-package com.mysidewalk.django
+package com.mysidewalk.docker
 
 /**
  *  Pipeline for building, testing, releasing, and pre/deploying a Docker image.
