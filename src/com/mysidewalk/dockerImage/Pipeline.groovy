@@ -3,7 +3,7 @@
 package com.mysidewalk.django
 
 /**
- *  Pipeline for building, testing, releasing, and pre/deploying a django microservice Docker image.
+ *  Pipeline for building, testing, releasing, and pre/deploying a Docker image.
  *
  *  Dependencies: curl, docker, docker-compose, gcloud-sdk, git, jq, make, pssh, xargs
  *  Jenkins Plugins: ansiColor, Slack Notification Plugin
@@ -15,7 +15,7 @@ package com.mysidewalk.django
  */
 
 
-def buildMicroservice(String serviceName, String dockerComposeFile='') {
+def buildDockerImage(String serviceName, String dockerComposeFile='', Closure stageSetup=null, Closure stageTest=null) {
   COMPOSE_PROJECT_NAME = ''
   ENVFILE = 'envfile'
   ENVIRONMENT = ''
@@ -168,55 +168,7 @@ ${deploymentType.PROD_DEPLOY}
               currentBuild.displayName += " - ${params.ACTION}"
             }
           }
-          writeFile (
-            file: '.env',
-            text: """
-COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
-ENVFILE=${ENVFILE}
-IMAGE=${IMAGE}
-IMAGE_BASE=${IMAGE_BASE}
-SERVICE=${SERVICE}
-"""
-          )
-          writeFile (
-            file: 'docker-compose.yml',
-            text: dockerComposeFile ?: """
-version: '2'
-services:
-  ${SERVICE}:
-    build: .
-    depends_on:
-      - postgres
-    env_file:
-      - ${ENVFILE}
-    environment:
-      REUSE_DB: 1
-    hostname: ${SERVICE}
-    image: ${IMAGE}
-  etcd2env:
-    image: ${IMAGE_BASE}/etcd2env
-  postgres:
-    hostname: postgres
-    image: ${IMAGE_BASE}/postgres:9.5
-    networks:
-      default:
-        aliases:
-         - db
-    volumes_from:
-      - postgres-data
-  postgres-data:
-    image: ${IMAGE_BASE}/postgres-data:development
-""",
-          )
-          sh "touch ${ENVFILE}"
           script {
-            if (ENVIRONMENT in [environment.EDGE, environment.PROD, environment.STAGE]) {
-              sh """
-                docker-compose run --rm etcd2env \
-                  sh -c 'python generate_env_vars.py ${ETCD_HOST} ${SERVICE} ${ENVIRONMENT} && python generate_env_vars.py ${ETCD_HOST} jenkins ${ENVIRONMENT}' \
-                  > ${ENVFILE}
-              """
-            }
             if (PREDEPLOYABLE || DEPLOYABLE || params.ACTION == deploymentType.ABANDON_PREDEPLOY) {
               GCE_INSTANCES = parseEnvfile("GCE_${SERVICE.toUpperCase()}", ENVFILE).tokenize(' ').toSet()
               pssh(GCE_INSTANCES, "sudo /etc/auth-gcr.sh")
@@ -228,19 +180,13 @@ services:
               slackSend channel: '#developers', color: 'good', message: "Stage ${SERVICE} pipeline is now unlocked."
             }
           }
-          sh 'sh /etc/auth-gcr.sh'
-          sh 'docker pull gcr.io/mindmixer-sidewalk/python:onbuild'
-          // Ignore pull failures for local-only images
-          sh 'docker-compose pull --ignore-pull-failures --parallel'
-          script {
-            if (TESTABLE || DEPLOYABLE) {
-              sh "docker-compose up -d postgres"
-            }
+          if (stageSetup) {
+            stageSetup()
           }
         }
       }
       stage('Build Image') {
-        //when { expression { return BUILDABLE } }
+        when { expression { return BUILDABLE } }
         steps {
           if (!whenHack(BUILDABLE)) {
             return
@@ -257,26 +203,21 @@ services:
         }
       }
       stage('Test') {
-        //when { expression { return TESTABLE } }
+        when { expression { return TESTABLE } }
         steps {
-          parallel(
-            unit: {
-              if (!whenHack(TESTABLE)) {
-                 return
-              }
-              sh "docker run --rm ${IMAGE} python manage.py test --settings=settings.unittesting"
-            },
-            integration: {
-              if (!whenHack(TESTABLE)) {
-                 return
-              }
-              sh 'make testintegration'
-            }
-          )
+          if (!whenHack(TESTABLE)) {
+             return
+          }
+          if (stageTest) {
+            stageTest()
+          }
+          else {
+            sh "make test"
+          }
         }
       }
       stage('Release Docker Image to GCR') {
-        //when { expression { return RELEASABLE } }
+        when { expression { return RELEASABLE } }
         steps {
           if (!whenHack(RELEASABLE)) {
             return
@@ -299,7 +240,7 @@ services:
         }
       }
       stage('Predeploy Prerelease Image to GCE') {
-        //when { expression { return PREDEPLOYABLE } }
+        when { expression { return PREDEPLOYABLE } }
         steps {
           if (!whenHack(PREDEPLOYABLE)) {
             return
@@ -310,7 +251,7 @@ services:
         }
       }
       stage('Deploy: Promote Prerelease Images') {
-        //when { expression { return DEPLOYABLE } }
+        when { expression { return DEPLOYABLE } }
         steps {
           if (!whenHack(DEPLOYABLE)) {
             return
@@ -319,7 +260,7 @@ services:
           gitAddTag("${IMAGE_RELEASE}", 'ready for deploy')
         }
       }
-      stage('Deploy: Migrate Database') {
+      stage('Deploy: Make Service') {
         when { expression { return DEPLOYABLE } }
         steps {
           script {
@@ -331,7 +272,7 @@ services:
         }
       }
       stage('Deploy: GCE Update Service') {
-        //when { expression { return DEPLOYABLE } }
+        when { expression { return DEPLOYABLE } }
         steps {
           if (!whenHack(DEPLOYABLE)) {
             return
