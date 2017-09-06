@@ -1,5 +1,8 @@
 #!/usr/bin/env groovy
 
+package com.mysidewalk.django
+
+
 void call() {
   writeFile (
     file: '.env',
