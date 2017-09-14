@@ -6,7 +6,7 @@ package com.mysidewalk.django
  *  Pipeline for building, testing, releasing, and pre/deploying a django microservice Docker image.
  *
  *  Dependencies: curl, docker, docker-compose, gcloud-sdk, git, jq, make, pssh, xargs
- *  Jenkins Plugins: ansiColor, Slack Notification Plugin
+ *  Jenkins Plugins: Slack Notification Plugin
  *
  *  Resources:
  *    https://jenkins.io/user-handbook.pdf
