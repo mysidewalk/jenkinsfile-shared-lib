@@ -94,10 +94,16 @@ ${deploymentType.PROD_DEPLOY}
           script {
             COMPOSE_PROJECT_NAME = "${SERVICE}_${env.BRANCH_NAME.toLowerCase()}_${env.BUILD_ID}"
             ENVIRONMENT = getEnvironment(params.ACTION, env.BRANCH_NAME.toLowerCase())
-            IMAGE = "${SERVICE}:${env.BRANCH_NAME.toLowerCase()}_${env.BUILD_ID}"
             if (params.ACTION == deploymentType.PROD_PREDEPLOY) {
-              // Set prod images to 'beta' for testing against prod environment db w/o rebuilding
+              // Set prod images to 'beta' for testing against prod environment db w/o rebuilding image
               IMAGE = "${IMAGE_BASE_SERVICE}:beta"
+            }
+            else if (params.ACTION == deploymentType.PROD_DEPLOY) {
+              // Set prod images to 'latest-prerelease' migrating prod environment db w/o rebuilding image
+              IMAGE = "${IMAGE_BASE_SERVICE}:latest-prerelease"
+            }
+            else {
+              IMAGE = "${SERVICE}:${env.BRANCH_NAME.toLowerCase()}_${env.BUILD_ID}"
             }
             IMAGE_RELEASE = ENVIRONMENT_TO_RELEASE[ENVIRONMENT] ?: env.BRANCH_NAME.toLowerCase()
             IMAGE_RELEASE_PRE = "${IMAGE_RELEASE}-prerelease"
