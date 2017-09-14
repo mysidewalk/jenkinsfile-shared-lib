@@ -349,6 +349,9 @@ services:
           if (!(params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
             sh "docker rmi ${IMAGE} || true"
           }
+          if (params.TAG) {
+            sh "docker rmi ${IMAGE_BASE_SERVICE}:${params.TAG} || true"
+          }
         }
         sh 'sudo chown -R jenkins *'
         deleteDir()
