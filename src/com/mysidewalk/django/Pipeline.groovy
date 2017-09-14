@@ -134,7 +134,7 @@ ${deploymentType.PROD_DEPLOY}
               currentBuild.result = 'ABORTED'
               error('Must be on branch "master" to abandon a prod pre-deploy.')
             }
-            else if (params.ACTION == deploymentType.EDGE_DEPLOY && env.BRANCH_NAME != environment.EDGE) {
+            else if (params.ACTION == deploymentType.EDGE_DEPLOY && env.BRANCH_NAME != branch.EDGE) {
               currentBuild.result = 'ABORTED'
               error('Must be on branch "edge" to deploy to edge environment.')
             }
