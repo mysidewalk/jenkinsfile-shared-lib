@@ -5,7 +5,7 @@ package com.mysidewalk.django
 /**
  *  Pipeline for building, testing, releasing, and pre/deploying a django microservice Docker image.
  *
- *  Dependencies: curl, docker, docker-compose, gcloud-sdk, git, jq, make, pssh, xargs
+ *  Dependencies: curl, docker, docker-compose, gcloud-sdk, git, jq, export COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}; make, pssh, xargs
  *  Jenkins Plugins: Slack Notification Plugin
  *
  *  Resources:
@@ -270,7 +270,7 @@ services:
               if (!whenHack(TESTABLE)) {
                  return
               }
-              sh 'make testintegration'
+              sh 'export COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}; make testintegration'
             }
           )
         }
@@ -326,7 +326,7 @@ services:
             if (!whenHack(DEPLOYABLE)) {
               return
             }
-            sh "make ${SERVICE}"
+            sh "export COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}; make ${SERVICE}"
           }
         }
       }
@@ -344,7 +344,7 @@ services:
     }
     post {
       always {
-        sh 'make clean || true'
+        sh 'export COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}; make clean || true'
         script {
           if (!(params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
             sh "docker rmi ${IMAGE} || true"
