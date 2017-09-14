@@ -366,7 +366,7 @@ services:
           def message
           if (params.ACTION == deploymentType.PROD_PREDEPLOY) {
             message = "Stage ${SERVICE} pipeline is now locked while pre-deploy testing of tag '${TAG}' is in progress."
-            message += " Please hold PR merges to ${SERVICE} until notified that stage ${SERVICE} pipeline is unlocked."
+            message += " Please hold PR merges to master until notified that stage ${SERVICE} pipeline is unlocked."
           }
           else if (params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_DEPLOY]) {
             message = "Deployment of ${SERVICE} was successful to ${ENVIRONMENT}."
