@@ -6,7 +6,7 @@ package com.mysidewalk.django
  *  Pipeline for building, testing, releasing, and pre/deploying a django microservice Docker image.
  *
  *  Dependencies: curl, docker, docker-compose, gcloud-sdk, git, jq, make, pssh, xargs
- *  Jenkins Plugins: ansiColor, Slack Notification Plugin
+ *  Jenkins Plugins: Slack Notification Plugin
  *
  *  Resources:
  *    https://jenkins.io/user-handbook.pdf
@@ -94,10 +94,16 @@ ${deploymentType.PROD_DEPLOY}
           script {
             COMPOSE_PROJECT_NAME = "${SERVICE}_${env.BRANCH_NAME.toLowerCase()}_${env.BUILD_ID}"
             ENVIRONMENT = getEnvironment(params.ACTION, env.BRANCH_NAME.toLowerCase())
-            IMAGE = "${SERVICE}:${env.BRANCH_NAME.toLowerCase()}_${env.BUILD_ID}"
             if (params.ACTION == deploymentType.PROD_PREDEPLOY) {
-              // Set prod images to 'beta' for testing against prod environment db w/o rebuilding
+              // Set prod images to 'beta' for testing against prod environment db w/o rebuilding image
               IMAGE = "${IMAGE_BASE_SERVICE}:beta"
+            }
+            else if (params.ACTION == deploymentType.PROD_DEPLOY) {
+              // Set prod images to 'latest-prerelease' migrating prod environment db w/o rebuilding image
+              IMAGE = "${IMAGE_BASE_SERVICE}:latest-prerelease"
+            }
+            else {
+              IMAGE = "${SERVICE}:${env.BRANCH_NAME.toLowerCase()}_${env.BUILD_ID}"
             }
             IMAGE_RELEASE = ENVIRONMENT_TO_RELEASE[ENVIRONMENT] ?: env.BRANCH_NAME.toLowerCase()
             IMAGE_RELEASE_PRE = "${IMAGE_RELEASE}-prerelease"
@@ -134,7 +140,7 @@ ${deploymentType.PROD_DEPLOY}
               currentBuild.result = 'ABORTED'
               error('Must be on branch "master" to abandon a prod pre-deploy.')
             }
-            else if (params.ACTION == deploymentType.EDGE_DEPLOY && env.BRANCH_NAME != environment.EDGE) {
+            else if (params.ACTION == deploymentType.EDGE_DEPLOY && env.BRANCH_NAME != branch.EDGE) {
               currentBuild.result = 'ABORTED'
               error('Must be on branch "edge" to deploy to edge environment.')
             }
@@ -168,16 +174,13 @@ ${deploymentType.PROD_DEPLOY}
               currentBuild.displayName += " - ${params.ACTION}"
             }
           }
-          writeFile (
-            file: '.env',
-            text: """
-COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
-ENVFILE=${ENVFILE}
-IMAGE=${IMAGE}
-IMAGE_BASE=${IMAGE_BASE}
-SERVICE=${SERVICE}
-"""
-          )
+          script {
+            env.COMPOSE_PROJECT_NAME = COMPOSE_PROJECT_NAME
+            env.ENVFILE = ENVFILE
+            env.IMAGE = IMAGE
+            env.IMAGE_BASE = IMAGE_BASE
+            env.SERVICE = SERVICE
+          }
           writeFile (
             file: 'docker-compose.yml',
             text: dockerComposeFile ?: """
@@ -349,6 +352,9 @@ services:
           if (!(params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_DEPLOY, deploymentType.PROD_PREDEPLOY])) {
             sh "docker rmi ${IMAGE} || true"
           }
+          if (params.TAG) {
+            sh "docker rmi ${IMAGE_BASE_SERVICE}:${params.TAG} || true"
+          }
         }
         sh 'sudo chown -R jenkins *'
         deleteDir()
@@ -366,7 +372,7 @@ services:
           def message
           if (params.ACTION == deploymentType.PROD_PREDEPLOY) {
             message = "Stage ${SERVICE} pipeline is now locked while pre-deploy testing of tag '${TAG}' is in progress."
-            message += " Please hold PR merges to ${SERVICE} until notified that stage ${SERVICE} pipeline is unlocked."
+            message += " Please hold PR merges to master until notified that stage ${SERVICE} pipeline is unlocked."
           }
           else if (params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_DEPLOY]) {
             message = "Deployment of ${SERVICE} was successful to ${ENVIRONMENT}."
