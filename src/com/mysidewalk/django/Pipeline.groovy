@@ -243,11 +243,8 @@ services:
         }
       }
       stage('Build Image') {
-        //when { expression { return BUILDABLE } }
+        when { expression { return BUILDABLE } }
         steps {
-          if (!whenHack(BUILDABLE)) {
-            return
-          }
           script {
             if (params.ACTION in [deploymentType.EDGE_DEPLOY, deploymentType.PROD_PREDEPLOY]) {
               echo "Skipping ${SERVICE} docker image build"
@@ -260,30 +257,21 @@ services:
         }
       }
       stage('Test') {
-        //when { expression { return TESTABLE } }
+        when { expression { return TESTABLE } }
         steps {
           parallel(
             unit: {
-              if (!whenHack(TESTABLE)) {
-                 return
-              }
               sh "docker run --rm ${IMAGE} python manage.py test --settings=settings.unittesting"
             },
             integration: {
-              if (!whenHack(TESTABLE)) {
-                 return
-              }
               sh 'make testintegration'
             }
           )
         }
       }
       stage('Release Docker Image to GCR') {
-        //when { expression { return RELEASABLE } }
+        when { expression { return RELEASABLE } }
         steps {
-          if (!whenHack(RELEASABLE)) {
-            return
-          }
           script {
             if (ENVIRONMENT in [environment.EDGE, environment.STAGE]) {
               imagePush(IMAGE, "${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE_PRE}")
@@ -302,22 +290,16 @@ services:
         }
       }
       stage('Predeploy Prerelease Image to GCE') {
-        //when { expression { return PREDEPLOYABLE } }
+        when { expression { return PREDEPLOYABLE } }
         steps {
-          if (!whenHack(PREDEPLOYABLE)) {
-            return
-          }
           script {
             psshPullImage(GCE_INSTANCES, "${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE_PRE}")
           }
         }
       }
       stage('Deploy: Promote Prerelease Images') {
-        //when { expression { return DEPLOYABLE } }
+        when { expression { return DEPLOYABLE } }
         steps {
-          if (!whenHack(DEPLOYABLE)) {
-            return
-          }
           imagePush("${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE_PRE}", "${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE}")
           gitAddTag("${IMAGE_RELEASE}", 'ready for deploy')
         }
@@ -326,19 +308,13 @@ services:
         when { expression { return DEPLOYABLE } }
         steps {
           script {
-            if (!whenHack(DEPLOYABLE)) {
-              return
-            }
             sh "make ${SERVICE}"
           }
         }
       }
       stage('Deploy: GCE Update Service') {
-        //when { expression { return DEPLOYABLE } }
+        when { expression { return DEPLOYABLE } }
         steps {
-          if (!whenHack(DEPLOYABLE)) {
-            return
-          }
           script {
             gceUpdateService(GCE_INSTANCES, "${IMAGE_BASE_SERVICE}:${IMAGE_RELEASE}", "${SERVICE}")
           }
