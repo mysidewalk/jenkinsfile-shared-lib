@@ -1,7 +1,5 @@
 #!/usr/bin/env groovy
 
-package com.mysidewalk.django
-
 /**
  *  Pipeline for building, testing, releasing, and pre/deploying a django microservice Docker image.
  *
@@ -15,32 +13,34 @@ package com.mysidewalk.django
  */
 
 
-def buildMicroservice(String serviceName, String dockerComposeFile='') {
-  COMPOSE_PROJECT_NAME = ''
-  ENVFILE = 'envfile'
-  ENVIRONMENT = ''
+void call(String serviceName, String dockerComposeFile='') {
   ENVIRONMENT_TO_RELEASE = [
     (environment.EDGE): 'gamma',
     (environment.PROD): 'latest',
     (environment.STAGE): 'beta',
   ]
-  ETCD_HOST = 'config-1.c.mindmixer-sidewalk.internal'
-  GCE_INSTANCES = ''
-  IMAGE = ''
-  IMAGE_BASE = 'gcr.io/mindmixer-sidewalk'
-  IMAGE_BASE_SERVICE = "${IMAGE_BASE}/${serviceName}"
-  IMAGE_RELEASE = ''
-  IMAGE_RELEASE_PRE = ''
-  SERVICE = serviceName
-  // Workflow Flags
-  BUILDABLE = false
-  TESTABLE = false
-  RELEASABLE = false
-  PREDEPLOYABLE = false
-  DEPLOYABLE = false
 
   pipeline {
     agent any
+    environment {
+      COMPOSE_PROJECT_NAME = ''
+      ENVFILE = 'envfile'
+      ENVIRONMENT = ''
+      ETCD_HOST = 'config-1.c.mindmixer-sidewalk.internal'
+      GCE_INSTANCES = ''
+      IMAGE = ''
+      IMAGE_BASE = 'gcr.io/mindmixer-sidewalk'
+      IMAGE_BASE_SERVICE = "${IMAGE_BASE}/${serviceName}"
+      IMAGE_RELEASE = ''
+      IMAGE_RELEASE_PRE = ''
+      SERVICE = serviceName
+      // Workflow Flags
+      BUILDABLE = false
+      TESTABLE = false
+      RELEASABLE = false
+      PREDEPLOYABLE = false
+      DEPLOYABLE = false
+    }
     parameters {
       choice(
         name: 'ACTION',
