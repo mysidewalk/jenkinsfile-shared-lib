@@ -8,7 +8,7 @@
  */
 
 
-def call(body) {
+void call(body) {
   pipeline {
     agent any
     parameters {
