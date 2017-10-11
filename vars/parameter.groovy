@@ -1,5 +1,8 @@
 #!/usr/bin/env groovy
 
+@Library('jenkinsfile-shared-lib') import deploymentType
+
+
 class parameter implements Serializable {
   private static String ACTION = 'ACTION'
   private static String ACTION_CHOICES = "none\n${deploymentType.ABANDON_PREDEPLOY}\n${deploymentType.EDGE_DEPLOY}\n${deploymentType.PROD_PREDEPLOY}\n${deploymentType.PROD_DEPLOY}"
