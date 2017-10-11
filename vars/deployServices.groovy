@@ -9,6 +9,7 @@
 
 
 void call(body) {
+  body()
   pipeline {
     agent any
     parameters {
