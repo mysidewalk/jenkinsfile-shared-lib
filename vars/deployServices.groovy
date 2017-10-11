@@ -1,7 +1,5 @@
 #!/usr/bin/env groovy
 
-package com.mysidewalk
-
 /**
  *  Pipeline deploying microservices in parallel.
  *
@@ -10,7 +8,7 @@ package com.mysidewalk
  */
 
 
-def deployServices() {
+def call(body) {
   pipeline {
     agent any
     parameters {
