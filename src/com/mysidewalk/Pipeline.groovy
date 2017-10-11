@@ -55,6 +55,8 @@ def deployServices() {
               script {
                 if (params.elections) {
                   build job "../${service.ELECTIONS}/test"
+                }
+              }
             },
             (service.FRONTEND): {
               script {
