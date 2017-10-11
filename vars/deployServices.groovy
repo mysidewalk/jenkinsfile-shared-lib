@@ -8,8 +8,7 @@
  */
 
 
-void call(body) {
-  body()
+void call() {
   pipeline {
     agent any
     parameters {
