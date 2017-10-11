@@ -44,33 +44,33 @@ def deployServices() {
       stage('Deploy') {
         steps {
           parallel(
-            service.AUTHWALK: {
+            (service.AUTHWALK): {
               script {
                 if (params.authwalk) {
                   build job "../${service.AUTHWALK}/test"
                 }
               }
             },
-            service.ELECTIONS: {
+            (service.ELECTIONS): {
               script {
                 if (params.elections) {
                   build job "../${service.ELECTIONS}/test"
             },
-            service.FRONTEND: {
+            (service.FRONTEND): {
               script {
                 if (params.frontend) {
                   build job "../${service.FRONTEND}/test"
                 }
               }
             },
-            service.MYSIDEWALK: {
+            (service.MYSIDEWALK): {
               script {
                 if (params.mysidewalk) {
                   build job "../${service.MYSIDEWALK}/test"
                 }
               }
             },
-            service.TESSERACT: {
+            (service.TESSERACT): {
               script {
                 if (params.tesseract) {
                   build job "../${service.TESSERACT}/test"
