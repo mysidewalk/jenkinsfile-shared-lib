@@ -6,4 +6,5 @@ class service implements Serializable {
   private static String FRONTEND = 'frontend'
   private static String MYSIDEWALK = 'mysidewalk'
   private static String TESSERACT = 'tesseract'
+  private static List<String> ALL = [AUTHWALK, ELECTIONS, FRONTEND, MYSIDEWALK, TESSERACT]
 }
