@@ -40,45 +40,19 @@ void call() {
     }
     stages {
       stage('Deploy') {
-        steps {
-          parallel(
-            (service.AUTHWALK): {
-              script {
-                if (params.authwalk) {
-                  build job "../${service.AUTHWALK}/test"
-                }
-              }
-            },
-            (service.ELECTIONS): {
-              script {
-                if (params.elections) {
-                  build job "../${service.ELECTIONS}/test"
-                }
-              }
-            },
-            (service.FRONTEND): {
-              script {
-                if (params.frontend) {
-                  build job "../${service.FRONTEND}/test"
-                }
-              }
-            },
-            (service.MYSIDEWALK): {
-              script {
-                if (params.mysidewalk) {
-                  build job "../${service.MYSIDEWALK}/test"
-                }
-              }
-            },
-            (service.TESSERACT): {
-              script {
-                if (params.tesseract) {
-                  build job "../${service.TESSERACT}/test"
-                }
-              }
-            }
-          )
+        stepsForParallel = [:]
+        for (int i = 0; i < service.ALL.size(); i++) {
+          String serviceName = service.ALL.get(i)
+          String jobName = "../${serviceName}/test"
+          def parameters = [
+            string(name: parameter.ACTION, value: params.ACTION),
+            string(name: parameter.TAG, value: params.TAG),
+            string(name: parameter.TAG_MESSAGE, value: params.TAG_MESSAGE),
+          ]
+          stepsForParallel[serviceName] = buildJobStep(jobName, parameters)
         }
+        stepsForParallel['failFast'] = false
+        parallel stepsForParallel
       }
     }
     post {
