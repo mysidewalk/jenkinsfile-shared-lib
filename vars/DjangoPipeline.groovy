@@ -1,7 +1,5 @@
 #!/usr/bin/env groovy
 
-package com.mysidewalk.django
-
 /**
  *  Pipeline for building, testing, releasing, and pre/deploying a django microservice Docker image.
  *
@@ -15,7 +13,7 @@ package com.mysidewalk.django
  */
 
 
-def buildMicroservice(String serviceName, String dockerComposeFile='') {
+void call(String serviceName, String dockerComposeFile='') {
   COMPOSE_PROJECT_NAME = ''
   ENVFILE = 'envfile'
   ENVIRONMENT = ''
