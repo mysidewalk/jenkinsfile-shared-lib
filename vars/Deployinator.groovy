@@ -4,6 +4,11 @@
 void call(String environment) {
   pipeline {
     agent any
+    options {
+      buildDiscarder(logRotator(numToKeepStr: '20'))
+      disableConcurrentBuilds()
+      skipDefaultCheckout()
+    }
     parameters {
       booleanParam(name: 'AUTHWALK', description: '')
       booleanParam(name: 'ELECTIONS', description: '')
@@ -27,41 +32,47 @@ void call(String environment) {
       )
     }
     stages {
+      stage('Setup') {
+        steps {
+          script {
+            parameters_included = [
+              string(name: parameter.ACTION, value: params.ACTION),
+              string(name: parameter.TAG, value: params.TAG),
+              string(name: parameter.TAG_MESSAGE, value: params.TAG_MESSAGE),
+            ]
+          }
+        }
+      }
       stage('Deploy') {
         parallel {
           stage('Authwalk') {
             when { expression { return params.AUTHWALK } }
             steps {
-              echo "../${service.AUTHWALK}/${environment}"
-              //build job: "../${service.AUTHWALK}/${environment}", parameters: params
+              build job: "../${service.AUTHWALK}/${environment}", parameters: parameters_included
             }
           }
           stage('Elections') {
             when { expression { return params.ELECTIONS } }
             steps {
-              echo "../${service.ELECTIONS}/${environment}"
-              //build job: "../${service.ELECTIONS}/${environment}", parameters: params
+              build job: "../${service.ELECTIONS}/${environment}", parameters: parameters_included
             }
           }
           stage('Frontend') {
             when { expression { return params.FRONTEND } }
             steps {
-              echo "../${service.FRONTEND}/${environment}"
-              //build job: "../${service.FRONTEND}/${environment}", parameters: params
+              build job: "../${service.FRONTEND}/${environment}", parameters: parameters_included
             }
           }
           stage('mySidewalk') {
             when { expression { return params.MYSIDEWALK } }
             steps {
-              echo "../${service.MYSIDEWALK}/${environment}"
-              //build job: "../${service.MYSIDEWALK}/${environment}", parameters: params
+              build job: "../${service.MYSIDEWALK}/${environment}", parameters: parameters_included
             }
           }
           stage('Tesseract') {
             when { expression { return params.TESSERACT } }
             steps {
-              echo "../${service.TESSERACT}/${environment}"
-              //build job: "../${service.TESSERACT}/${environment}", parameters: params
+              build job: "../${service.TESSERACT}/${environment}", parameters: parameters_included
             }
           }
         }
