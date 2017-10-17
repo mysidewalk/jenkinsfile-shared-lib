@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 
-void call(String environment) {
+void call(String branch, String actionChoices) {
   pipeline {
     agent any
     options {
@@ -17,7 +17,7 @@ void call(String environment) {
       booleanParam(name: 'TESSERACT', description: '')
       choice(
         name: parameter.ACTION,
-        choices: parameter.ACTION_CHOICES,
+        choices: actionChoices,
         description: parameter.ACTION_DESCRIPTION,
       )
       string(
