@@ -38,21 +38,25 @@ ${deploymentType.PROD_DEPLOY}
   private static String TAG_MESSAGE = 'TAG_MESSAGE'
   private static String TAG_MESSAGE_DEFAULT_VALUE = 'release candidate'
   private static String TAG_MESSAGE_DESCRIPTION = 'Git tag message. (e.g. "This is the first release of reports.") Only used by ${deploymentType.PROD_PREDEPLOY}.'
-  def ALL = [
-    choice(
+  # keeping this here, even though I can't figure out how to load them in a pipeline yet
+  private static List<Object> ALL = [
+    [
+      $class: 'ChoiceParameter',
       name: parameter.ACTION,
       choices: parameter.ACTION_CHOICES,
       description: parameter.ACTION_DESCRIPTION,
-    ),
-    string(
+    ],
+    [
+      $class: 'StringParameter',
       name: parameter.TAG,
       defaultValue: parameter.TAG_DEFAULT_VALUE,
       description: parameter.TAG_DESCRIPTION,
-    ),
-    text(
+    ],
+    [
+      $class: 'TextParameter',
       name: parameter.TAG_MESSAGE,
       defaultValue: parameter.TAG_MESSAGE_DEFAULT_VALUE,
       description: parameter.TAG_MESSAGE_DESCRIPTION,
-    ),
+    ],
   ]
 }
