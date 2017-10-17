@@ -12,7 +12,11 @@ void call(String environment) {
   pipeline {
     agent any
     parameters {
-      $parameters
+      booleanParam(name: 'AUTHWALK')
+      booleanParam(name: 'ELECTIONS')
+      booleanParam(name: 'FRONTEND')
+      booleanParam(name: 'MYSIDEWALK')
+      booleanParam(name: 'TESSERACT')
     }
     stages {
       stage('Deploy') {
@@ -20,31 +24,31 @@ void call(String environment) {
           stage('Authwalk') {
             when { expression { return params.AUTHWALK } }
             steps {
-              echo "../${service.AUTHWALK}/edge"
+              echo "../${service.AUTHWALK}/${environment}"
             }
           }
           stage('Elections') {
             when { expression { return params.ELECTIONS } }
             steps {
-              echo "../${service.ELECTIONS}/edge"
+              echo "../${service.ELECTIONS}/${environment}"
             }
           }
           stage('Frontend') {
             when { expression { return params.FRONTEND } }
             steps {
-              echo "../${service.FRONTEND}/edge"
+              echo "../${service.FRONTEND}/${environment}"
             }
           }
           stage('mySidewalk') {
             when { expression { return params.MYSIDEWALK } }
             steps {
-              echo "../${service.MYSIDEWALK}/edge"
+              echo "../${service.MYSIDEWALK}/${environment}"
             }
           }
           stage('Tesseract') {
             when { expression { return params.TESSERACT } }
             steps {
-              echo "../${service.TESSERACT}/edge"
+              echo "../${service.TESSERACT}/${environment}"
             }
           }
         }
