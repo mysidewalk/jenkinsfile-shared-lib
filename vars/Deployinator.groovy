@@ -1,5 +1,9 @@
 #!/usr/bin/env groovy
 
+/**
+ *  Pipeline for building and pre/deploying a mySidewalk services in parallel.
+ */
+
 
 void call(String branch, String actionChoices) {
   pipeline {
