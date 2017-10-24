@@ -1,8 +1,5 @@
 #!/usr/bin/env groovy
 
-@Library('jenkinsfile-shared-lib') import deploymentType
-
-
 class parameter implements Serializable {
   private static String ACTION = 'ACTION'
   private static String ACTION_CHOICES = "none\n${deploymentType.ABANDON_PREDEPLOY}\n${deploymentType.EDGE_DEPLOY}\n${deploymentType.PROD_PREDEPLOY}\n${deploymentType.PROD_DEPLOY}"
@@ -34,10 +31,10 @@ ${deploymentType.PROD_DEPLOY}
   Must be on branch "master" to run this deployment."""
   private static String TAG = 'TAG'
   private static String TAG_DEFAULT_VALUE = 'none'
-  private static String TAG_DESCRIPTION = 'Git and GCR Docker image tag name. (e.g. 2017-01-30-v1) Only used by ${deploymentType.PROD_PREDEPLOY}.'
+  private static String TAG_DESCRIPTION = "Git and GCR Docker image tag name. (e.g. 2017-01-30-v1) Only used by ${deploymentType.PROD_PREDEPLOY}."
   private static String TAG_MESSAGE = 'TAG_MESSAGE'
   private static String TAG_MESSAGE_DEFAULT_VALUE = 'release candidate'
-  private static String TAG_MESSAGE_DESCRIPTION = 'Git tag message. (e.g. "This is the first release of reports.") Only used by ${deploymentType.PROD_PREDEPLOY}.'
+  private static String TAG_MESSAGE_DESCRIPTION = "Git tag message. (e.g. 'This is the first release of reports.') Only used by ${deploymentType.PROD_PREDEPLOY}."
   // keeping this here, even though I can't figure out how to use ALL in a pipeline yet
   private static List<Object> ALL = [
     [
