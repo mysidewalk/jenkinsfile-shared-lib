@@ -38,7 +38,7 @@ ${deploymentType.PROD_DEPLOY}
   private static String TAG_MESSAGE = 'TAG_MESSAGE'
   private static String TAG_MESSAGE_DEFAULT_VALUE = 'release candidate'
   private static String TAG_MESSAGE_DESCRIPTION = 'Git tag message. (e.g. "This is the first release of reports.") Only used by ${deploymentType.PROD_PREDEPLOY}.'
-  # keeping this here, even though I can't figure out how to load them in a pipeline yet
+  // keeping this here, even though I can't figure out how to use ALL in a pipeline yet
   private static List<Object> ALL = [
     [
       $class: 'ChoiceParameter',
