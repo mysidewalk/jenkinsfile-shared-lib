@@ -43,7 +43,10 @@ void call(String serviceName, String dockerComposeFile='') {
       choice(
         name: parameter.ACTION,
         choices: parameter.ACTION_CHOICES,
-        description: parameter.ACTION_DESCRIPTION,
+        description: """${deploymentType.ABANDON_PREDEPLOY_DESCRIPTION}
+${deploymentType.EDGE_DEPLOY_DESCRIPTION}
+${deploymentType.PROD_PREDEPLOY_DESCRIPTION}
+${deploymentType.PROD_DEPLOY_DESCRIPTION}""",
       )
       string(
         name: parameter.TAG,
