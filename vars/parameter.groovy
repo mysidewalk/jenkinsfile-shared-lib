@@ -1,8 +1,5 @@
 #!/usr/bin/env groovy
 
-@Library('jenkinsfile-shared-lib') import deploymentType
-
-
 class parameter implements Serializable {
   private static String ACTION = 'ACTION'
   private static String TAG = 'TAG'
