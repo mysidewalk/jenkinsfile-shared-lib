@@ -22,7 +22,10 @@ void call(String branch, String actionChoices) {
       choice(
         name: parameter.ACTION,
         choices: actionChoices,
-        description: parameter.ACTION_DESCRIPTION,
+        description: """${deploymentType.ABANDON_PREDEPLOY_DESCRIPTION}
+${deploymentType.EDGE_DEPLOY_DESCRIPTION}
+${deploymentType.PROD_PREDEPLOY_DESCRIPTION}
+${deploymentType.PROD_DEPLOY_DESCRIPTION}""",
       )
       string(
         name: parameter.TAG,
