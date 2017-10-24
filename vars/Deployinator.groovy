@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 /**
- *  Pipeline for building and pre/deploying a mySidewalk services in parallel.
+ *  Pipeline for building and pre/deploying mySidewalk services in parallel
  */
 
 
