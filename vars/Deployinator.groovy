@@ -55,31 +55,31 @@ ${deploymentType.PROD_DEPLOY_DESCRIPTION}""",
           stage('Authwalk') {
             when { expression { return params.AUTHWALK } }
             steps {
-              build job: "../${service.AUTHWALK}/${environment}", parameters: parameters_included
+              build job: "../${service.AUTHWALK}/${branch}", parameters: parameters_included
             }
           }
           stage('Elections') {
             when { expression { return params.ELECTIONS } }
             steps {
-              build job: "../${service.ELECTIONS}/${environment}", parameters: parameters_included
+              build job: "../${service.ELECTIONS}/${branch}", parameters: parameters_included
             }
           }
           stage('Frontend') {
             when { expression { return params.FRONTEND } }
             steps {
-              build job: "../${service.FRONTEND}/${environment}", parameters: parameters_included
+              build job: "../${service.FRONTEND}/${branch}", parameters: parameters_included
             }
           }
           stage('mySidewalk') {
             when { expression { return params.MYSIDEWALK } }
             steps {
-              build job: "../${service.MYSIDEWALK}/${environment}", parameters: parameters_included
+              build job: "../${service.MYSIDEWALK}/${branch}", parameters: parameters_included
             }
           }
           stage('Tesseract') {
             when { expression { return params.TESSERACT } }
             steps {
-              build job: "../${service.TESSERACT}/${environment}", parameters: parameters_included
+              build job: "../${service.TESSERACT}/${branch}", parameters: parameters_included
             }
           }
         }
