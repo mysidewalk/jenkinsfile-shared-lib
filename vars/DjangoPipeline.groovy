@@ -198,7 +198,7 @@ services:
             }
             if (PREDEPLOYABLE || DEPLOYABLE || params.ACTION == deploymentType.ABANDON_PREDEPLOY) {
               GCE_INSTANCES = parseEnvfile("GCE_${SERVICE.toUpperCase()}", ENVFILE).tokenize(' ').toSet()
-              pssh(GCE_INSTANCES, "sudo /etc/auth-gcr.sh")
+              pssh(GCE_INSTANCES, "sudo /opt/bin/auth-gcr.sh")
             }
             if (params.ACTION == deploymentType.ABANDON_PREDEPLOY && isStageLocked(IMAGE_BASE_SERVICE)) {
               gitRemoveTag('latest-prerelease')
@@ -207,7 +207,7 @@ services:
               slackSend channel: '#developers', color: 'good', message: "Stage ${SERVICE} pipeline is now unlocked."
             }
           }
-          sh 'sh /etc/auth-gcr.sh'
+          sh 'sh /opt/bin/auth-gcr.sh'
           sh 'docker pull gcr.io/mindmixer-sidewalk/python:onbuild'
           // Ignore pull failures for local-only images
           sh 'docker-compose pull --ignore-pull-failures --parallel'
