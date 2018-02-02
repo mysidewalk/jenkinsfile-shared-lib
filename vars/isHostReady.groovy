@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-Boolean call(String gceInstance, String zone = 'us-central1-b') {
+Boolean call(String instance, String zone = 'us-central1-b') {
   // Host is ready if GCE instance status is RUNNING
   sh (
     script: """
