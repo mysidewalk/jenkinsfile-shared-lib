@@ -237,7 +237,7 @@ services:
         steps {
           parallel(
             unit: {
-              sh "make testunit"
+              sh 'make testunit'
             },
             integration: {
               sh 'make testintegration'
