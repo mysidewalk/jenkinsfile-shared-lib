@@ -237,7 +237,7 @@ services:
         steps {
           parallel(
             unit: {
-              sh "docker run --rm ${IMAGE} python manage.py test --settings=settings.unittesting"
+              sh "make testunit"
             },
             integration: {
               sh 'make testintegration'
