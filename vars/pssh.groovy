@@ -6,7 +6,7 @@ void call(Set<String> hosts, String command) {
       -H "${hosts.sort().join(' ')}" \
       -O StrictHostKeyChecking=no \
       -O UserKnownHostsFile=/dev/null \
-      -t 120 \
+      -t 300 \
       --inline \
       "${command}"
   """
