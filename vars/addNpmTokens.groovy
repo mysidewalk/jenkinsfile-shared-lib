@@ -6,7 +6,7 @@ void call(String envfile) {
     set -o nounset
     set -o pipefail
 
-    npm_tokens=\$(grep -P '^npm\.' ${envfile})
+    npm_tokens=\$(grep -iP '^npm\.' ${envfile})
 
     if [[ -n \${npm_tokens} ]]; then
       for token in \${npm_tokens[@]}; do
