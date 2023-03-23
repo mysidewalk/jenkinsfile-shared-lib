@@ -16,6 +16,6 @@ void call(String service) {
       done
     fi
 
-    rm ${service}.env
+    rm -f ${service}.env
   """
 }
