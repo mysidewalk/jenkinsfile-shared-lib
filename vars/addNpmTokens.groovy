@@ -15,7 +15,5 @@ void call(String service) {
         echo "//\${token_name}/:_authToken=\${token_value}" >> .npmrc
       done
     fi
-
-    rm -f ${service}.env
   """
 }
