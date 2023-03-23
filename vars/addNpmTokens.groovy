@@ -7,7 +7,7 @@ void call(String environment, String service) {
     set -o pipefail
 
     docker run --rm \
-      -v $(pwd):/output \
+      -v \$(pwd):/output \
       -e ENVIRONMENT=${environment} \
       -e SERVICE=${service} \
       -e CONFD_NODES='["http://config-1:2379", "http://config-2:2379", "http://config-3:2379"]' \
