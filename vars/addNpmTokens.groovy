@@ -10,9 +10,7 @@ void call(String service) {
 
     if [[ -n \${npm_tokens} ]]; then
       for token in \${npm_tokens[@]}; do
-        token_name=\$(echo \${token} | cut -d '=' -f 1)
-        token_value=\$(echo \${token} | cut -d '=' -f 2)
-        echo "//\${token_name}/:_authToken=\${token_value}" >> .npmrc
+        echo "//\${token%%=*}/:_authToken=\${token##*=}" >> .npmrc
       done
     fi
   """
