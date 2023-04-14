@@ -19,7 +19,7 @@ void call(Set<String> hosts, String command) {
         jobs+=(\$!)
     done
     
-    for pid in \${pids[@]}; do
+    for pid in \${jobs[@]}; do
       wait \$pid || let "fail=1"
     done
     
