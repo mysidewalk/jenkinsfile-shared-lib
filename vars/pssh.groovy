@@ -5,7 +5,7 @@ void call(Set<String> hosts, String command) {
     hosts="${hosts.sort().join(' ')}"
     jobs=()
     fail=0
-    tmpdir=$(mktemp -d)
+    tmpdir=\$(mktemp -d)
 
     for host in \${hosts[@]}; do
       timeout 300 ssh \
