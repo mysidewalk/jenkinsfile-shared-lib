@@ -9,6 +9,10 @@ void call(Set<String> hosts, String command) {
     fail=0
     tmpdir=\$(mktemp -d)
 
+    printf "Running command against hosts...\n"
+    printf "command: ${command}\n"
+    printf "hosts: \${hosts}\n\n"
+
     for host in \${hosts[@]}; do
       timeout 300 ssh \
         -o StrictHostKeyChecking=no \
