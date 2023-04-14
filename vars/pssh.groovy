@@ -2,6 +2,8 @@
 
 void call(Set<String> hosts, String command) {
   sh """
+    set +x
+
     hosts="${hosts.sort().join(' ')}"
     jobs=()
     fail=0
