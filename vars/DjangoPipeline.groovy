@@ -176,7 +176,7 @@ services:
     image: ${IMAGE_BASE}/etcd2env
   postgres:
     hostname: postgres
-    image: ${IMAGE_BASE}/postgres:9.5
+    image: ${IMAGE_BASE}/postgres:14
     networks:
       default:
         aliases:
