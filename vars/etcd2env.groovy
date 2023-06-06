@@ -7,6 +7,6 @@ void call(String service, String environment, String envfile) {
     set -o pipefail
 
     docker run --rm gcr.io/mindmixer-sidewalk/etcd2env \
-        python generate_env_vars.py config1.c.mindmixer-sidewalk.internal ${service} ${environment} > ${envfile}
+        python generate_env_vars.py config-1.c.mindmixer-sidewalk.internal ${service} ${environment} > ${envfile}
   """
 }
