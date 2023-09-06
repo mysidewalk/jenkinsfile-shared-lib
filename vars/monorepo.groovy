@@ -2,6 +2,7 @@
 // Pipelines for each Jenkinsfile found in the repository.
 // https://medium.com/blablacar/supercharge-jenkins-for-monorepos-multi-multibranch-pipelines-9bc11eb28e3c
 
+import java.nio.file.Path
 import hudson.model.*
 
 /**
