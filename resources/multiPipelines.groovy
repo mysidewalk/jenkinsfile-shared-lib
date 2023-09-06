@@ -69,7 +69,7 @@ def generateMultibranchPipelines(List<Path> jenkinsfilePaths, Path rootFolder, S
                             configuredByUrl(false)
 
                             // Make sure to properly set this.
-                            credentialsId('github-token')
+                            credentialsId('mysidewalksa-user')
 
                             traits {
                                 // Depending on your preferences and root pipeline configuration, you can decide to
