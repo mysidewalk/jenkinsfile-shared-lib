@@ -120,7 +120,7 @@ def runPipelines(String rootFolderPath, List<String> multibranchPipelinesToRun) 
  * The step entry point.
  */
 def call() {
-    String repositoryName = env.JOB_NAME.split('/')[1]
+    String repositoryName = env.JOB_NAME.split('/')[0]
     String rootFolderPath = "Generated/$repositoryName"
 
     List<String> jenkinsfilePaths = provisionItems(rootFolderPath, env.GIT_URL)
