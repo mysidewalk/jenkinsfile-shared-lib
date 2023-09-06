@@ -1,3 +1,6 @@
+import java.nio.file.Path
+import hudson.model.*
+
 /**
  * Get all ancestor folders paths.
  * <pre>
