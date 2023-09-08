@@ -111,6 +111,7 @@ def runPipelines(String rootFolderPath, List<String> multibranchPipelinesToRun) 
             }
 
             // Trigger downstream builds.
+            print("Triggering build for $pipelineName")
             build(job: pipelineName, propagate: true, wait: true)
         }]
     })
