@@ -103,15 +103,14 @@ def runPipelines(String rootFolderPath, List<String> multibranchPipelinesToRun) 
             // For new branches, Jenkins will receive an event from the version control system to provision the
             // corresponding Pipeline under the Multibranch Pipeline item. We have to wait for Jenkins to process the
             // event so a build can be triggered.
-            //timeout(time: 5, unit: 'MINUTES') {
-                //waitUntil(initialRecurrencePeriod: 1e3) {
-                    //def pipeline = Jenkins.instance.getItemByFullName(pipelineName)
-                    //pipeline && !pipeline.isDisabled()
-                //}
-            //}
+            timeout(time: 5, unit: 'MINUTES') {
+                waitUntil(initialRecurrencePeriod: 1e3) {
+                    def pipeline = Jenkins.instance.getItemByFullName(pipelineName)
+                    pipeline && !pipeline.isDisabled()
+                }
+            }
 
             // Trigger downstream builds.
-            print("Triggering build for $pipelineName")
             build(job: pipelineName, propagate: true, wait: true)
         }]
     })
