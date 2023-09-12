@@ -46,7 +46,7 @@ def generateMultibranchPipelines(List<Path> jenkinsfilePaths, Path rootFolder, S
     String repositoryName = matcher.group('repository')
 
     // Discover branches strategies
-    final int EXCLUDE_PULL_REQUESTS_STRATEGY_ID = 1
+    final int EXCLUDE_PULL_REQUESTS_STRATEGY_ID = 2
 
     // Discover pull requests from origin strategies
     final int USE_CURRENT_SOURCE_STRATEGY_ID = 2
