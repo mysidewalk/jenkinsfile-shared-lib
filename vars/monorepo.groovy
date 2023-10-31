@@ -98,6 +98,7 @@ List<String> findMultibranchPipelinesToRun(List<String> jenkinsfilePaths) {
  */
 def runPipelines(String rootFolderPath, List<String> multibranchPipelinesToRun) {
     multibranchPipelinesToRun.each { multibranchPipelineToRun ->
+        println "Running $multibranchPipelineToRun"
         [:] + [("Build $multibranchPipelineToRun"): {
             def pipelineName = "$rootFolderPath/$multibranchPipelineToRun/${URLEncoder.encode(env.CHANGE_BRANCH ?: env.GIT_BRANCH, 'UTF-8')}"
             // For new branches, Jenkins will receive an event from the version control system to provision the
@@ -111,6 +112,7 @@ def runPipelines(String rootFolderPath, List<String> multibranchPipelinesToRun) 
             }
 
             // Trigger downstream builds.
+            println "Triggering $pipelineName"
             build(job: pipelineName, propagate: true, wait: true)
         }]
     }
