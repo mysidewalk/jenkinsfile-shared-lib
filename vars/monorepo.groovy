@@ -40,7 +40,10 @@ String getBaselineRevision() {
     // Depending on your seed pipeline configuration and preferences, you can set the baseline revision to a target
     // branch, e.g. the repository's default branch or even `env.CHANGE_TARGET` if Jenkins is configured to discover
     // pull requests.
-    [ "origin/$env.CHANGE_TARGET", env.GIT_PREVIOUS_SUCCESSFUL_COMMIT, env.GIT_PREVIOUS_COMMIT]
+    [ "{if (env.CHANGE_TARGET) { "origin/$env.CHANGE_TARGET" }}",
+      env.GIT_PREVIOUS_SUCCESSFUL_COMMIT,
+      env.GIT_PREVIOUS_COMMIT
+    ]
     // Look for the first existing existing revision. Commits can be removed (e.g. with a `git push --force`), so a
     // previous build revision may not exist anymore.
             .find { revision ->
