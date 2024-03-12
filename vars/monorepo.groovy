@@ -45,7 +45,7 @@ String getBaselineRevision() {
     // previous build revision may not exist anymore.
             .find { revision ->
                 revision != null && sh(script: "git rev-parse --quiet --verify $revision", returnStatus: true) == 0
-            }
+            } ?: 'HEAD^'
 }
 
 /**
