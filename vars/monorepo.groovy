@@ -46,7 +46,7 @@ String getBaselineRevision() {
     // Look for the first existing existing revision. Commits can be removed (e.g. with a `git push --force`), so a
     // previous build revision may not exist anymore.
             .find { revision ->
-                revision != null && sh(script: "git rev-parse --quiet --verify $revision", returnStdout: true) == 0
+                revision != "" && sh(script: "git rev-parse --quiet --verify $revision", returnStdout: true) == 0
             } ?: 'HEAD^'
 }
 
