@@ -40,7 +40,7 @@ String getBaselineRevision() {
     // Depending on your seed pipeline configuration and preferences, you can set the baseline revision to a target
     // branch, e.g. the repository's default branch or even `env.CHANGE_TARGET` if Jenkins is configured to discover
     // pull requests.
-    [ "${if (env.CHANGE_TARGET) { "origin/$env.CHANGE_TARGET" }}",
+    [ if (env.CHANGE_TARGET) { "origin/$env.CHANGE_TARGET" },
       env.GIT_PREVIOUS_SUCCESSFUL_COMMIT,
       env.GIT_PREVIOUS_COMMIT
     ]
