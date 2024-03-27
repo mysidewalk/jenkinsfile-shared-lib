@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-void call(String serviceName, String region, String image, String envfile) {
+void call(String serviceName, String region, String image, String envfile='') {
   sh """
     set -o errexit
     set -o nounset
