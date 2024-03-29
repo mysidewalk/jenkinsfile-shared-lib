@@ -18,7 +18,7 @@ void call(String serviceName, String region, String image, String envfile='') {
       gcloud run deploy ${serviceName} \
         --quiet \
         --image=${image} \
-        --update-labels=managed-by=jenkins,commit-sha=${env.GIT_COMMIT} \
+        --update-labels=managed-by=jenkins,commit-sha=\$GIT_REVISION \
         --region=${region} \
         --env-vars-file=${envfile}
     fi
