@@ -9,7 +9,7 @@ void call(String serviceName, String region, String image, String envfile='', St
     labels="mangedby=jenkins"
 
     if [ -z "${extraLabels}" ]; then
-      labels+="${extraLabels}"
+      labels+=",${extraLabels}"
     fi
 
     if [ -z "${envfile}" ]; then
