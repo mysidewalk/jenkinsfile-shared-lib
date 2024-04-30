@@ -16,13 +16,13 @@ void call(String serviceName, String region, String image, String envfile='', St
       gcloud run deploy ${serviceName} \
         --quiet \
         --image=${image} \
-        --update-labels=${labels} \
+        --update-labels=\${labels} \
         --region=${region}
     else
       gcloud run deploy ${serviceName} \
         --quiet \
         --image=${image} \
-        --update-labels=${labels} \
+        --update-labels=\${labels} \
         --region=${region} \
         --env-vars-file=${envfile}
     fi
