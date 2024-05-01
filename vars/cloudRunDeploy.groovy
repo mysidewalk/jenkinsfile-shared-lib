@@ -6,7 +6,7 @@ void call(String serviceName, String region, String image, String envfile='', St
     set -o nounset
     set -o pipefail
 
-    labels="mangedby=jenkins"
+    labels="manged-by=jenkins"
 
     if [ ! -z "${extraLabels}" ]; then
       labels+=",${extraLabels}"
